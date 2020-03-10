@@ -33,12 +33,13 @@
 #include "system/nebulasettings.h"
 #include "profiling/profiling.h"
 
-
 #ifdef __WIN32__
 #include <shellapi.h>
 #elif __LINUX__
 
 #endif
+
+#include "EntityManager.h"
 
 using namespace Timing;
 using namespace Graphics;
@@ -48,8 +49,17 @@ using namespace IO;
 using namespace Http;
 using namespace Debug;
 
+
 namespace Example
 {
+    //__ImplementClass(TransformComponent, 'asdg', BaseComponent);
+    /*
+    class Foo : public Core::RefCounted
+    {
+        __DeclareClass(Foo)
+           
+    }*/
+
 
 //------------------------------------------------------------------------------
 /**
@@ -59,6 +69,11 @@ ExampleApplication::ExampleApplication() :
 {
     this->SetAppTitle("Viewer App");
     this->SetCompanyName("Nebula");
+    //Ptr<BaseComponent> component = TransformComponent::Create();
+
+
+    //Ptr<Foo> myPtr = Foo::Create();
+
 }
 
 //------------------------------------------------------------------------------
@@ -256,6 +271,8 @@ ExampleApplication::Run()
 {    
     bool run = true;
 
+
+
     const Ptr<Input::Keyboard>& keyboard = inputServer->GetDefaultKeyboard();
     const Ptr<Input::Mouse>& mouse = inputServer->GetDefaultMouse();
     
@@ -272,6 +289,7 @@ ExampleApplication::Run()
     // Setup the observable as a model
     ObservableContext::Setup(exampleEntity, VisibilityEntityType::Model);
 
+    /*
     // Example animated entity
     Graphics::GraphicsEntityId animatedEntity = Graphics::CreateEntity();
     // The CharacterContext holds skinned, animated entites and takes care of playing animations etc.
@@ -284,6 +302,37 @@ ExampleApplication::Run()
     // nsk3 is the skeleton resource, nax3 is the animation resource. nax3 files can contain multiple animation clips
     Characters::CharacterContext::Setup(animatedEntity, "ske:Units/Unit_Footman.nsk3", "ani:Units/Unit_Footman.nax3", "Examples");
     Characters::CharacterContext::PlayClip(animatedEntity, nullptr, 0, 0, Characters::Append, 1.0f, 1, Math::n_rand() * 100.0f, 0.0f, 0.0f, Math::n_rand() * 100.0f);
+
+    Graphics::GraphicsEntityId animatedEntity2 = Graphics::CreateEntity();
+    // The CharacterContext holds skinned, animated entites and takes care of playing animations etc.
+    Graphics::RegisterEntity<ModelContext, ObservableContext, Characters::CharacterContext>(animatedEntity2);
+    // create model and move it to the front
+    ModelContext::Setup(animatedEntity2, "mdl:Units/Unit_king.n3", "Examples");
+    ModelContext::SetTransform(animatedEntity2, Math::matrix44::translation(Math::point(5, 5, 0)));
+    ObservableContext::Setup(animatedEntity2, VisibilityEntityType::Model);
+    // Setup the character context instance.
+    // nsk3 is the skeleton resource, nax3 is the animation resource. nax3 files can contain multiple animation clips
+    Characters::CharacterContext::Setup(animatedEntity2, "ske:Units/Unit_king.nsk3", "ani:Units/Unit_king.nax3", "Examples");
+    Characters::CharacterContext::PlayClip(animatedEntity2, nullptr, 0, 0, Characters::Append, 1.0f, 1, Math::n_rand() * 100.0f, 0.0f, 0.0f, Math::n_rand() * 100.0f);
+
+    */
+    
+    EntityManager TheManager;
+    TheManager.AddEntity();
+    Ptr<BaseComponent> TheTransform = TransformComponent::Create();
+    Ptr<BaseComponent> TheGraphic = GraphicsComponent::Create();
+    TheManager.AddComponent(0, TheTransform);
+    TheManager.AddComponent(0, TheGraphic);
+    TheManager.Entities[0]->OnLoad();
+    
+    
+    //delete Test;
+
+    //TransformComponent(&TheManager.Entities[0]);
+    //GraphicsComponent(&TheManager.Entities[0]);
+    //TheManager.Entities[0].AddComponent(TransformComponent(&TheManager.Entities[0]));
+    //TheManager.Entities[0].AddComponent(GraphicsComponent(&TheManager.Entities[0]));
+
 
     // Create a point light entity
     Graphics::GraphicsEntityId pointLight = Graphics::CreateEntity();
@@ -300,6 +349,9 @@ ExampleApplication::Run()
 #if __NEBULA_HTTP__
 		this->httpServerProxy->HandlePendingRequests();
 #endif
+
+        TheManager.Entities[0]->Send(Message("Move"));
+        TheManager.Update();            //Added My Own Things
 
 		this->coreServer->Trigger();
 
